@@ -7,13 +7,7 @@
 *
 * After roscore is started, do $rosrun rosserial_python serial_node.py /dev/ttyUSB[X] on the machine that the NearZero board is attached to, which will let NearZero interract with ROS.
 * After that, with no additional configuration, NearZero will respond to velocity commands issued over the cmd_vel topic.
-*
-*
-*Development notes (leave for if there's free time before first unit gets sold): 
-*  Dynamic mode w/ hall sensing may be failing on certain motors (namely the hub motor) because the section of code that triggers on the phaseindex
-*  may be triggering on the "wrong side" of the sensdelay triggers. The fix may be as simple as adding an offset parameter for the
-*  phaseindex triggers (c2TrigN). If so, this would be a new calibration parameter. 
-*/
+
 
 #include <avr/io.h>   //IO library for avr microcontrollers.
 #include <EEPROM.h>   //We'll need to access the EEPROM for storing configuration data.
