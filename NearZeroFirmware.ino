@@ -1,13 +1,13 @@
 /*
-* Fine Positioning Brushless Controller Firmware
+* NearZero Firmware
 * Author: Justine Haupt
 * Project started on 9/9/18
-* Version 1.0 released 
-*
+* Version 1.1 (released 3/11/2020)
 *
 * After roscore is started, do $rosrun rosserial_python serial_node.py /dev/ttyUSB[X] on the machine that the NearZero board is attached to, which will let NearZero interract with ROS.
 * After that, with no additional configuration, NearZero will respond to velocity commands issued over the cmd_vel topic.
-
+*
+*/
 
 #include <avr/io.h>   //IO library for avr microcontrollers.
 #include <EEPROM.h>   //We'll need to access the EEPROM for storing configuration data.
@@ -68,6 +68,15 @@
 #define addr_wheelbasescaler 42
 #define addr_wheeldiamscalel 43
 #define addr_wheeldiamscaler 44
+#define addr_pwmoffset1l 45
+#define addr_pwmoffset1r 46
+#define addr_pwmoffset2l 47
+#define addr_pwmoffset2r 48
+#define addr_maxslewvel1l 49
+#define addr_maxslewvel1r 50
+#define addr_maxslewvel2l 51
+#define addr_maxslewvel2r 52
+
 
 float phaseindex1 = pi;     //Start at pi radians so that the starting value of sin(phaseangle_U1) is 0.
 float phaseindex2 = pi;     //Start at pi radians so that the starting value of sin(phaseangle_U1) is 0.
@@ -129,8 +138,8 @@ float pos1_holder = 0;
 float pos2_holder = 0;
 float pos1_last;
 float pos2_last;
-float servovel1;
-float servovel2;
+float slewvel1;
+float slewvel2;
 float I_A;   //Current in amps after conversion from ADUs.
 float I_qui;  //Stores currrent in amps before energizing motors in SetPower() function.
 float I_adu_av = 0;   //Averaged current in ADUs
@@ -151,8 +160,12 @@ int power1_diag;	//This is used to store an intermediate power value (amount of 
 int power2_diag;
 int pindex1_flag = 0;
 int pindex2_flag = 0;
+int enc1_state = 0;
 int enc1_laststate = 0;
+int enc2_state = 0;
 int enc2_laststate = 0;
+float enc1_abstick = 0;
+float enc2_abstick = 0;
 int ticksarray[] = {0, 0};
 int c1Trig_laststate = 0;
 int c1Trig_lastlaststate = 0;
@@ -182,13 +195,15 @@ float minIset1;		//minimum or reduced current used when restmode = 1.
 float minIset2;
 int gain1;		//Velocity multiplier.
 int gain2;
+int pwmoffset1;	//PWM center
+int pwmoffset2;
 int torqueprofile1;		//0 = OFF/sine, 1 = ON
 int torqueprofile2;
 int currentmode1;	//0 = FIXED, 1 = DYNAMIC
 int currentmode2;
-int commandmode1;	//0 = VELOCITY control, 1 = POSITION control
+int commandmode1;	//0 = VELOCITY command, 1 = POSITION command, 2 = SERVO command
 int commandmode2;
-int sensortype1;	//0 = NONE, 1 = ENCODER, 2 = HALL
+int sensortype1;	//0 = NONE, 1 = ENCODER, 2 = ENCODER/SERVO, 3 = HALL
 int sensortype2; 	
 int tscoeff1;		//Scaling coefficient for torque smoothing (ts) fourier series
 int tscoeff2;
@@ -201,6 +216,8 @@ float tsphase1;		//Phase offset for torque smoothing (ts) fourier series
 float tsphase2;
 float accel1;	//Sets gain of position following velocity (sets servo aggressiveness)
 float accel2;
+float maxslewvel1;
+float maxslewvel2;
 
 //EEPROM address locations and related things
 int lhlf;			//holder for the left half of an integer
@@ -358,7 +375,9 @@ void setup(){
 
 	GTCCR = 0; // release all timers by setting all bits back to 0.
 
-	if (digitalRead(mode_config) == LOW){
+	if (digitalRead(mode_ros) == LOW){	//Initialize serial unless we're in ROS mode.
+	}
+	else{
 		Serial.begin(9600);
 	}
 	DisplaySettings();
@@ -375,33 +394,25 @@ void loop(){
 	if (commandmode1 == 0){	//if in velocity mode
 		Roll_vel1();    
 	}
-	else if (commandmode1 == 1){	//if in position mode
+	else  { //if in position or servo mode
 		Roll_pos1();    
 	}
 	if (commandmode2 == 0){	//if in velocity mode
 		Roll_vel2();    
 	}
-	else if (commandmode2 == 1){	//if in position mode
+	else {	//if in position or servo mode
 		Roll_pos2();    
 	}
-	//CHECK FOR RUNAWAY VELOCITY ISSUE .... NOTE: Doesn't seem to work. Delete?
-	/*if (vel2 > 5){
-		if (digitalRead(mode_config) == LOW){
-			Serial.println(F("Start-time error detected. RESETTING."));
-		}		
-		softReset();
-	}*/
 }
 
 void Roll_vel1(){
-	//If an encoder is attached
-	if (sensortype1 == 1){		
+	if (sensortype1 == 1 || sensortype1 == 2){		//If sensortype is set to encoder-external, report encoder ticks
 		ReadEnc1();
 	}
-	//If a hall sensor is attached
-	else if (sensortype1 == 2){		
+	else if (sensortype1 == 3){		//If sensortype is set to hall-external
 		ReadHall1();
 	}
+
 	//CALCULATE ACCELERATION DYNAMICS
 	if (accel1 == 10000) {	//If accel=10000, this means the accel variable shouldn't even be used
 		actualvel1 = vel1;
@@ -455,7 +466,7 @@ void Roll_vel1(){
 
 	//WRITE OUTPUTS
 	dutyU1 = (255/2)+(power1*(sin(phaseindex1)));	   //The duty cycle varies with the sine function, which has output between -1 and 1. That is scaled by an amplitude variable, which effectively sets the motor power.This is all offset by half the maximum duty cycle so that the lowest instantaeous duty cycle is always positive.
-	analogWrite(U1_High,dutyU1);	//Write to the PWM pins.
+	analogWrite(U1_High,dutyU1);	//Write to the PWM OUT pins.
 	dutyV1 = (255/2)+(power1*(sin(phaseindex1+(2*pi/3))));
 	analogWrite(V1_High,dutyV1);
 	dutyW1 = (255/2)+(power1*(sin(phaseindex1+(4*pi/3))));
@@ -463,12 +474,10 @@ void Roll_vel1(){
 }
 
 void Roll_vel2(){
-	//If an encoder is attached
-	if (sensortype2 == 1){		
+	if (sensortype2 == 1 || sensortype2 == 2){		//If sensortype is set to encoder-external, report encoder ticks
 		ReadEnc2();
 	}
-	//If a hall sensor is attached
-	else if (sensortype2 == 2){		
+	else if (sensortype2 == 3){		//If sensortype is set to hall-external
 		ReadHall2();
 	}
 	//CALCULATE ACCELERATION DYNAMICS
@@ -532,12 +541,23 @@ void Roll_vel2(){
 }
 
 void Roll_pos1(){
-	//If an encoder is attached
-	if (sensortype1 == 1){		
+	float encstep1 = .03;	//The bigger this is, the smaller the motor's movement range will be
+	if (sensortype1 == 1){		//If sensortype is set to encoder, report encoder ticks and keep track of relative position in case we're in SERVO mode
 		ReadEnc1();
+		if (enc1_state == 0 && enc1_laststate == 3){
+			enc1_abstick = enc1_abstick + encstep1;		//Increment the absolute tracking counter
+			enc1_laststate = enc1_state;
+		}
+		else if (enc1_state == 3 && enc1_laststate == 0){
+			enc1_abstick = enc1_abstick - encstep1;		//decrement the absolute tracking counter
+			enc1_laststate = enc1_state;
+		}
+		else {
+			enc1_abstick = enc1_abstick + (encstep1*(enc1_state - enc1_laststate));		//Increment or decrement the absolute tracking counter depending on how big of a change was detected in the encoder state
+			enc1_laststate = enc1_state;
+		}		
 	}
-	//If a hall sensor is attached
-	else if (sensortype1 == 2){		
+	else if (sensortype1 == 2){		//If sensortype is set to hall
 		ReadHall1();
 	}
 	//Check for REVERSE directionality
@@ -545,25 +565,56 @@ void Roll_pos1(){
 		pos1 = (-1)*pos1;
 	}
 
-	//CALCULATE SERVO SLEW USING DELTA INPUT
-	servovel1 = (accel1/100000)*(fabs(phaseindex1 - pos1));	
-
-	//INCREMENT PHASE INDEX
-	if ((phaseindex1 - .2) > pos1){		//the constant defines the deadzone
-		phaseindex1 = phaseindex1 - servovel1; 
-		power1 = power1_high;
-		j = 0;
-	}
-	else if ((phaseindex1 + .2) < pos1){
-		phaseindex1 = phaseindex1 + servovel1;
-		power1 = power1_high;
-		j = 0;
-	}
-	else {//they're equal, so don't move the phaseindex, but DO set the power to the low setting
-		j++;
-		if (j == 100){
-			power1 = power1_low;
+	//TRACK THE MOTOR AGAINST THE COMMANDED POSITION
+	if (commandmode1 == 1) {		//If in POSITION command mode, track phase index to the commanded position
+		slewvel1 = (accel1/100000)*(fabs(phaseindex1 - pos1));	//make this a signmoid func. instead of capping below
+		if (slewvel1 > maxslewvel1) {	//cap the max slewrate	
+			slewvel1 = maxslewvel1;
 		}
+		else if (slewvel1 < -maxslewvel1){
+			slewvel1 = -maxslewvel1;
+		}
+		if ((phaseindex1 - .2) > pos1){		//the constant defines the deadzone
+			phaseindex1 = phaseindex1 - slewvel1; 
+			power1 = power1_high;
+			j = 0;
+		}
+		else if ((phaseindex1 + .2) < pos1){
+			phaseindex1 = phaseindex1 + slewvel1;
+			power1 = power1_high;
+			j = 0;
+		}
+		else {//they're equal, so don't move the phaseindex, but DO set the power to the low setting
+			j++;
+			if (j == 100){
+				power1 = power1_low;
+			}
+		}
+	}
+	else if (commandmode1 == 2){ //If in SERVO command mode, track the encoder tick counter (enc1_abstick) to the commanded position
+		slewvel1 = (accel1/100000)*(fabs(enc1_abstick - pos1));  //make this a signmoid func. instead of capping below
+		if (slewvel1 > maxslewvel1) {	//cap the max slewrate	
+			slewvel1 = maxslewvel1;
+		}
+		else if (slewvel1 < -maxslewvel1){
+			slewvel1 = -maxslewvel1;
+		}
+		if ((enc1_abstick - .1) > pos1){		//the constant defines the deadzone
+			phaseindex1 = phaseindex1 - slewvel1; 
+			power1 = power1_high;
+			j = 0;
+		}
+		else if ((enc1_abstick + .1) < pos1){
+			phaseindex1 = phaseindex1 + slewvel1;
+			power1 = power1_high;
+			j = 0;
+		}
+		else {//they're equal, so don't move the phaseindex, but DO set the power to the low setting
+			j++;
+			if (j == 100){
+				power1 = power1_low;
+			}
+		}	
 	}
 
 	//UPDATE MOTOR POSITION
@@ -584,12 +635,23 @@ void Roll_pos1(){
 }
 
 void Roll_pos2(){
-	//If an encoder is attached
-	if (sensortype2 == 1){		
+	float encstep2 = .03;	//The bigger this is, the smaller the motor's movement range will be
+	if (sensortype2 == 1){		//If sensortype is set to encoder, report encoder ticks and keep track of relative position in case we're in SERVO mode
 		ReadEnc2();
+		if (enc2_state == 0 && enc2_laststate == 3){
+			enc2_abstick = enc2_abstick + encstep2;		//Increment the absolute tracking counter
+			enc2_laststate = enc2_state;
+		}
+		else if (enc2_state == 3 && enc2_laststate == 0){
+			enc2_abstick = enc2_abstick - encstep2;		//decrement the absolute tracking counter
+			enc2_laststate = enc2_state;
+		}
+		else {
+			enc2_abstick = enc2_abstick + (encstep2*(enc2_state - enc2_laststate));		//Increment or decrement the absolute tracking counter depending on how big of a change was detected in the encoder state
+			enc2_laststate = enc2_state;
+		}		
 	}
-	//If a hall sensor is attached
-	else if (sensortype2 == 2){		
+	else if (sensortype2 == 2){		//If sensortype is set to hall
 		ReadHall2();
 	}
 	//Check for REVERSE directionality
@@ -597,25 +659,56 @@ void Roll_pos2(){
 		pos2 = (-1)*pos2;
 	}
 
-	//CALCULATE SERVO SLEW USING DELTA INPUT
-	servovel2 = (accel2/100000)*(fabs(phaseindex2 - pos2));	
-
-	//INCREMENT PHASE INDEX
-	if ((phaseindex2 - .2) > pos2){		//the constant defines the deadzone
-		phaseindex2 = phaseindex2 - servovel2; 
-		power2 = power2_high;
-		j = 0;
-	}
-	else if ((phaseindex2 + .2) < pos2){
-		phaseindex2 = phaseindex2 + servovel2;
-		power2 = power2_high;
-		j = 0;
-	}
-	else {//they're equal, so don't move the phaseindex, but DO set the power to the low setting
-		j++;
-		if (j == 100){
-			power2 = power2_low;
+	//TRACK THE MOTOR AGAINST THE COMMANDED POSITION
+	if (commandmode2 == 1) {		//If in POSITION command mode, track phase index to the commanded position
+		slewvel2 = (accel2/100000)*(fabs(phaseindex2 - pos2));	////make this a signmoid func. instead of capping below
+		if (slewvel2 > maxslewvel2) {	//cap the max slewrate	
+			slewvel2 = maxslewvel2;
 		}
+		else if (slewvel2 < -maxslewvel2){
+			slewvel2 = -maxslewvel2;
+		}
+		if ((phaseindex2 - .2) > pos2){		//the constant defines the deadzone
+			phaseindex2 = phaseindex2 - slewvel2; 
+			power2 = power2_high;
+			j = 0;
+		}
+		else if ((phaseindex2 + .2) < pos2){
+			phaseindex2 = phaseindex2 + slewvel2;
+			power2 = power2_high;
+			j = 0;
+		}
+		else {	//they're equal, so don't move the phaseindex, but DO set the power to the low setting
+			j++;
+			if (j == 100){
+				power2 = power2_low;
+			}
+		}
+	}
+	else if (commandmode2 == 2){ //If in SERVO command mode, track the encoder tick counter (enc2_abstick) to the commanded position
+		slewvel2 = (accel2/100000)*(fabs(enc2_abstick - pos2));  //make this a signmoid func. instead of capping below
+		if (slewvel2 > maxslewvel2) {	//cap the max slewrate	
+			slewvel2 = maxslewvel2;
+		}	
+	else if (slewvel2 < -maxslewvel2){
+			slewvel2 = -maxslewvel2;
+		}
+		if ((enc2_abstick - .1) > pos2){		//the constant defines the deadzone
+			phaseindex2 = phaseindex2 - slewvel2; 
+			power2 = power2_high;
+			j = 0;
+		}
+		else if ((enc2_abstick + .1) < pos2){
+			phaseindex2 = phaseindex2 + slewvel2;
+			power2 = power2_high;
+			j = 0;
+		}
+		else {//they're equal, so don't move the phaseindex, but DO set the power to the low setting
+			j++;
+			if (j == 100){
+				power2 = power2_low;
+			}
+		}	
 	}
 
 	//UPDATE MOTOR POSITION
@@ -623,7 +716,7 @@ void Roll_pos2(){
 
 	//CALCULATE TORQUE SMOOTHING (IF ON)
 	if (torqueprofile2 == 1){	//If the anti-coffing profile is set to 1, make the phase index be the phase index plus (minus) a correction which is a function of the phase index. The fuction 
-		phaseindex2 = phaseindex2 - (tscoeff2*.00025*sin(2*phaseindex2+(.469+tsphase1)) + tscoeff2*.00005*sin(4*phaseindex2+(.491+tsphase2)));  
+		phaseindex2 = phaseindex2 - (tscoeff2*.00025*sin(2*phaseindex2+(.469+tsphase2)) + tscoeff2*.00005*sin(4*phaseindex2+(.491+tsphase2)));  
 	}
 
 	//WRITE OUTPUTS
@@ -634,3 +727,4 @@ void Roll_pos2(){
 	dutyW2 = (255/2)+(power2*(sin(phaseindex2+(4*pi/3))));
 	analogWrite(W2_High,dutyW2);
 }
+

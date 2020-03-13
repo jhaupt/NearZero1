@@ -218,6 +218,72 @@ void PROMPT_gain2Entry(){
 	EEPROM.write(addr_gain2r, rhlf);	
 }
 
+void PROMPT_pwmoffset1Entry(){			
+	SerialReceiveLoop();
+	pwmoffset1 = atoi(rxchars);	//Convert rxchars to an integer 
+	if (pwmoffset1 > 10000){
+		CheckConfig();
+		Serial.print(F("Maximum center offset is 10000. PWM CENTER LEFT AT "));
+		Serial.println(pwmoffset1);
+		Serial.println(F("\n\n"));
+		exitflag = true;
+		delay(2000);
+		return;		
+	}
+	else if (pwmoffset1 > 0 && pwmoffset1 <= 10000){} //Don't do anything. This is just here so we can have the below "else" to detect an invalid entry.
+	else {
+		CheckConfig();
+		Serial.print(F("PWM CENTER OFFSET LEFT AT "));
+		Serial.println(pwmoffset1);
+		Serial.println(F("\n\n"));
+		exitflag = true;		
+		return;
+	}
+	if (pwmoffset1 < 100){		//If it's a 1 or 2 digit number
+		lhlf = 0;	//The left half of the four digit number is 0
+		rhlf = pwmoffset1;		//And the right half is just the number
+	}
+	else {		//If it's a 3 or 4 digit number
+		lhlf = floor(pwmoffset1/100);		//The left half is the leading digit of a 3 digit number or leading 2 digits of a 4 digit number.
+		rhlf = pwmoffset1 - (lhlf*100);	//The right half is the trailing two digits of the number.
+	}
+	EEPROM.write(addr_pwmoffset1l, lhlf);   
+	EEPROM.write(addr_pwmoffset1r, rhlf);	
+}
+
+void PROMPT_pwmoffset2Entry(){			
+	SerialReceiveLoop();
+	pwmoffset2 = atoi(rxchars);	//Convert rxchars to an integer 
+	if (pwmoffset2 > 10000){
+		CheckConfig();
+		Serial.print(F("Maximum center offset is 10000. PWM CENTER LEFT AT "));
+		Serial.println(pwmoffset2);
+		Serial.println(F("\n\n"));
+		exitflag = true;
+		delay(2000);
+		return;		
+	}
+	else if (pwmoffset2 > 0 && pwmoffset2 <= 10000){} //Don't do anything. This is just here so we can have the below "else" to detect an invalid entry.
+	else {
+		CheckConfig();
+		Serial.print(F("PWM CENTER OFFSET LEFT AT "));
+		Serial.println(pwmoffset2);
+		Serial.println(F("\n\n"));
+		exitflag = true;		
+		return;
+	}
+	if (pwmoffset2 < 100){		//If it's a 1 or 2 digit number
+		lhlf = 0;	//The left half of the four digit number is 0
+		rhlf = pwmoffset2;		//And the right half is just the number
+	}
+	else {		//If it's a 3 or 4 digit number
+		lhlf = floor(pwmoffset2/100);		//The left half is the leading digit of a 3 digit number or leading 2 digits of a 4 digit number.
+		rhlf = pwmoffset2 - (lhlf*100);	//The right half is the trailing two digits of the number.
+	}
+	EEPROM.write(addr_pwmoffset2l, lhlf);   
+	EEPROM.write(addr_pwmoffset2r, rhlf);	
+}
+
 void PROMPT_WheelBaseScaleEntry(){
 	SerialReceiveLoop();
 	wheelbasescale = atoi(rxchars);	//Convert rxchars to an integer 
@@ -464,6 +530,72 @@ void PROMPT_accel2Entry(){
 	EEPROM.write(addr_accel2r, rhlf);	
 }
 
+void PROMPT_maxslewvel1Entry(){			
+	SerialReceiveLoop();
+	maxslewvel1 = atoi(rxchars);	//Convert rxchars to an integer 
+	if (maxslewvel1 > 1000){
+		CheckConfig();
+		Serial.print(F("Maximum MAX SLEW RATE is 1,000. MAX SLEW RATE LEFT AT "));
+		Serial.println(maxslewvel1);
+		Serial.println(F("\n\n"));
+		exitflag = true;
+		delay(2000);
+		return;		
+	}
+	else if (maxslewvel1 > 0 && maxslewvel1 <= 1000){}	//Don't do anything. This is just here so we can have the below "else" to detect an invalid entry.
+	else {
+		CheckConfig();
+		Serial.print(F("MAX SLEW RATE LEFT AT "));
+		Serial.println(maxslewvel1);
+		Serial.println(F("\n\n"));
+		exitflag = true;		
+		return;
+	}
+	if (maxslewvel1 < 100){		//If it's a 1 or 2 digit number
+		lhlf = 0;	//The left half of the four digit number is 0
+		rhlf = maxslewvel1;		//And the right half is just the number
+	}
+	else {		//If it's a 3 or 4 digit number
+		lhlf = floor(maxslewvel1/100);		//The left half is the leading digit of a 3 digit number or leading 2 digits of a 4 digit number.
+		rhlf = maxslewvel1 - (lhlf*100);	//The right half is the trailing two digits of the number.
+	}
+	EEPROM.write(addr_maxslewvel1l, lhlf);   
+	EEPROM.write(addr_maxslewvel1r, rhlf);	
+}
+
+void PROMPT_maxslewvel2Entry(){			
+	SerialReceiveLoop();
+	maxslewvel2 = atoi(rxchars);	//Convert rxchars to an integer 
+	if (maxslewvel2 > 1000){
+		CheckConfig();
+		Serial.print(F("Maximum MAX SLEW RATE is 1,000. MAX SLEW RATE LEFT AT "));
+		Serial.println(maxslewvel2);
+		Serial.println(F("\n\n"));
+		exitflag = true;
+		delay(2000);
+		return;		
+	}
+	else if (maxslewvel2 > 0 && maxslewvel2 <= 1000){}	//Don't do anything. This is just here so we can have the below "else" to detect an invalid entry.
+	else {
+		CheckConfig();
+		Serial.print(F("MAX SLEW RATE LEFT AT "));
+		Serial.println(maxslewvel2);
+		Serial.println(F("\n\n"));
+		exitflag = true;		
+		return;
+	}
+	if (maxslewvel2 < 100){		//If it's a 1 or 2 digit number
+		lhlf = 0;	//The left half of the four digit number is 0
+		rhlf = maxslewvel2;		//And the right half is just the number
+	}
+	else {		//If it's a 3 or 4 digit number
+		lhlf = floor(maxslewvel2/100);		//The left half is the leading digit of a 3 digit number or leading 2 digits of a 4 digit number.
+		rhlf = maxslewvel2 - (lhlf*100);	//The right half is the trailing two digits of the number.
+	}
+	EEPROM.write(addr_maxslewvel2l, lhlf);   
+	EEPROM.write(addr_maxslewvel2r, rhlf);	
+}
+
 void SerialReceiveLoop(){
 	int ndx = 0;
 	char endMarker = '\n';
@@ -488,37 +620,44 @@ void SerialReceiveLoop(){
 	}
 }
 
+
 int SerialPrompt(){
 
+	//MAIN MENU
 	mainmenu:
 	exitflag = false;
 	Serial.println(F("\n\n\n"));
 	Serial.println(F("~~~~Welcome to the NearZero Configuration Terminal~~~~"));
-	Serial.println(F("         Firmware version 1.0 -- by J. Haupt"));
+	Serial.println(F("         Firmware version 1.1 -- by J. Haupt"));
 	Serial.println(F("       CHANGES TAKE EFFECT AFTER CYCLING POWER"));
 	Serial.println(F("                   or RESETTING\n"));
 	Serial.println(F("1: Channel 1 configuration"));
 	Serial.println(F("2: Channel 2 configuration"));
 	Serial.println(F("3: ROS Configuration"));
-	Serial.println(F("q: Quit/RESET (use after changing INPUT SELECT jumper as desired)"));
+	Serial.println(F("4: List current settings"));
+	Serial.println(F("5: Reset factory defaults"));
+	Serial.println(F("q: Quit/restart (use after changing INPUT SELECT jumper as desired)"));
 	Serial.println(F("\n\n>>\n"));
 	SerialReceiveLoop();
+
+	//CHANNEL 1 CONFIGURATION
 	if (rxchars[0] == '1'){	
 		ch1menu:
 		exitflag = false;
 		Serial.println(F("Channel 1 Configuration:\n"));
 		Serial.println(F("1: Set POWER"));
-		Serial.println(F("2: Set command type (VELOCITY or POSITION)"));
-		Serial.println(F("3: Set sensor type"));
+		Serial.println(F("2: Set command type (VELOCITY, POSITION, or SERVO)"));
+		Serial.println(F("3: Set SENSOR type (NONE, ENCODER, or HALL)"));
 		Serial.println(F("4: Set directionality (NORMAL or REVERSE)"));
-		Serial.println(F("5: Display all present settings"));
 		Serial.println(F("m: Return to main menu"));
 		Serial.println(F(" "));
-		Serial.println(F("Advanced settings:"));
-		Serial.println(F("6: Set PWM command GAIN"));
-		Serial.println(F("7: Set ACCELERATION"));
-		Serial.println(F("8: Set waveform TORQUE SMOOTHING"));
-		Serial.println(F("9: Test/run channel 1 motor"));
+		Serial.println(F("Additional settings:"));
+		Serial.println(F("5: Set PWM command GAIN"));
+		Serial.println(F("6: Set PWM center OFFSET"));
+		Serial.println(F("7: Set ACCELERATION")); 
+		Serial.println(F("8: Set maximum position/servo SLEW RATE"));
+		Serial.println(F("9: Set waveform TORQUE SMOOTHING"));
+		Serial.println(F("t: Test/run channel 1 motor"));
 		Serial.println(F("\n\n>>"));
 		SerialReceiveLoop();
 		exitflag =false;
@@ -553,9 +692,10 @@ int SerialPrompt(){
 		}
 		//**Set PWM command type to VELOCITY or POSITION
 		else if (rxchars[0] == '2'){
-			Serial.println(F("Set channel 1 to interpret ROS or PWM input as either velocity or position commands:"));
-			Serial.println(F("   v: VELOCITY (default)"));
+			Serial.println(F("Set channel 1 to interpret ROS or PWM input as either velocity, position, or servo commands:"));
+			Serial.println(F("   v: VELOCITY"));
 			Serial.println(F("   p: POSITION"));
+			Serial.println(F("   s: SERVO (same as POSITION but with closed-loop control) -- requires encoder"));
 			Serial.println(F("\n   (Or strike 'Enter' to leave as is)")); 
 			Serial.println(F("\n\n>>"));
 			SerialReceiveLoop();
@@ -567,6 +707,10 @@ int SerialPrompt(){
 				EEPROM.write(addr_commandmode1, 1);	//1 = position
 				Serial.print(F("CHANNEL 1 INPUT SET TO 'POSITION'"));
 			}
+			else if (rxchars[0] == 's' || rxchars[0] == 'S'){
+				EEPROM.write(addr_commandmode1, 2);	//2 = servo
+				Serial.print(F("CHANNEL 1 INPUT SET TO 'SERVO'"));
+			}
 			else {
 				Serial.println(F("COMMAND TYPE NOT CHANGED"));
 			}	
@@ -577,32 +721,30 @@ int SerialPrompt(){
 		//**Set ROS configuration
 		else if (rxchars[0] == '3'){
 			Serial.println(F("Set channel 1 sensor type:"));
-			Serial.println(F("   n: NONE (default)"));
-			Serial.print(F("   e: Quadrature ENCODER -- publishes quadrature ticks (integers 0-3) on /"));
+			Serial.println(F("   0: NONE -- open-loop control"));
+			Serial.print(F("   1: ENCODER -- publishes quadrature ticks (integers 0-3) on /"));
 			Serial.print(enctopic);
-			Serial.println(F(" topic."));
-			Serial.print(F("   h: HALL -- publishes hall ticks (integers 0-2) on /"));	
+			Serial.println(F(" topic for external closed-loop control -- also needed for SERVO command mode"));
+			Serial.print(F("   2: HALL -- publishes hall ticks (integers 0-2) on /"));	
 			Serial.print(enctopic);
-			Serial.println(F(" topic."));
+			Serial.println(F(" topic for external closed-loop control"));
 			Serial.println(F("\n   (Or strike 'Enter' to leave as is)")); 
 			Serial.println(F("\n\n>>"));	
 			SerialReceiveLoop();
-			if (rxchars[0] == 'n' || rxchars[0] == 'N'){
+			if (rxchars[0] == '0'){
 				EEPROM.write(addr_sensortype1, 0);	//0 = none
-				Serial.println(F("CHANNEL 1 SENSOR SET TO 'NONE'"));
-				//Serial.println(F("POWER MODE WILL REVERT TO 'FIXED'"));
-				//EEPROM.write(addr_currentmode1, 0);	//0 = fixed 
+				Serial.println(F("CHANNEL 1 SENSOR SET TO 'NONE' FOR OPEN LOOP CONTROL"));
 			}			
-			else if (rxchars[0] == 'e' || rxchars[0] == 'E'){
+			else if (rxchars[0] == '1'){
 				exitflag = false;
-				Serial.print(F("CHANNEL 1 SENSOR SET TO 'ENCODER'"));
-				EEPROM.write(addr_sensortype1, 1);	//1 = encoder	
+				EEPROM.write(addr_sensortype1, 1);	//1 = encoder
+				Serial.print(F("CHANNEL 1 SENSOR SET TO 'ENCODER' FOR EXTERNAL VELOCITY OR POSITION CLOSED-LOOP CONTROL"));	
 			}
-			else if (rxchars[0] == 'h' || rxchars[0] == 'H'){
+			else if (rxchars[0] == '2'){
 				exitflag = false;
-				Serial.print(F("CHANNEL 1 SENSOR SET TO 'HALL'"));
-				EEPROM.write(addr_sensortype1, 2);	//2 = hall	
-			}	
+				EEPROM.write(addr_sensortype1, 2);	//2 = hall
+				Serial.print(F("CHANNEL 1 SENSOR SET TO 'HALL' FOR EXTERNAL VELOCITY OR POSITION CLOSED-LOOP CONTROL"));	
+			}
 			else{
 				Serial.print(F("SENSOR TYPE NOT CHANGED"));
 			}	
@@ -633,19 +775,13 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch1menu;
 		}
-		//**Display all present settings
-		else if (rxchars[0] == '5'){
-			CheckConfig();
-			DisplaySettings();
-			delay(7000);
-			goto ch1menu;			
-		}
+
 		//**Return to main menu
 		else if (rxchars[0] == 'm'){
 			goto mainmenu;
 		}
 		//**Set velocity/position GAIN
-		else if (rxchars[0] == '6'){	
+		else if (rxchars[0] == '5'){	
 			Serial.println(F("Set channel 1 PWM command gain."));
 			Serial.println(F("   This is the scaling coefficient for velocity or position inputs when in PWM-command mode."));
 			Serial.println(F("\n   Enter an integer between 1 and 1000 (arbitrary units)"));	
@@ -662,12 +798,29 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch1menu;
 		}
+		//**Set PWM CENTER
+		else if (rxchars[0] == '6'){	
+			Serial.println(F("Set channel 1 PWM center offset."));
+			Serial.println(F("   This defines the pulse width which defines the command-neutral position."));
+			Serial.println(F("\n   Enter an integer between 1 and 9000 (1500 is common)"));	
+			Serial.println(F("   or strike 'Enter' to leave as is:")); 	
+			Serial.println(F("\n\n>>"));
+			PROMPT_pwmoffset1Entry();
+			if (exitflag == true){
+				delay(2000);
+				goto ch1menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+			Serial.print(F("\nCHANNEL 1 PWM CENTER SET TO "));
+			Serial.print(pwmoffset1);
+			Serial.println(F("\n\n\n\n"));
+			delay(2000);		
+			goto ch1menu;
+		}
+
 		//**Set ACCELERATION
 		else if (rxchars[0] == '7'){	
 			Serial.println(F("Set channel 1 acceleration."));
-			Serial.println(F("   In VELOCITY input mode, this affects how aggressively the motor ramps velocity to the commanded velocity."));
-			Serial.println(F("   In POSITION input mode, this affects how aggressively the motor's position follows the commanded position."));
-			Serial.println(F("\n   Enter acceleration (an integer between 1 an 9999, arbitary units)."));
+			Serial.println(F("\n   This is an integer in arbitrary units between 1 and 9999."));
 			Serial.println(F("   Enter 10000 to turn off acceleration dynamics entirely."));
 			Serial.println(F("   Strike 'Enter' to leave as is:")); 	
 			Serial.println(F("\n\n>>"));
@@ -679,18 +832,40 @@ int SerialPrompt(){
 			if (accel1 == 10000){
 				Serial.println(F("CHANNEL 1 ACCELERATION DYNAMICS TURNED OFF"));
 				delay(2000);
-				goto ch1menu;
+				goto ch1menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
 			}
 			else {
 				Serial.print(F("CHANNEL 1 ACCELERATION SET TO "));
 				Serial.print(accel1);
 				Serial.println(F("\n\n\n\n"));
 				delay(2000);		
+				goto ch1menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+		}
+
+		//**Set MAX SLEW RATE
+		else if (rxchars[0] == '8'){	
+			Serial.println(F("Set channel 1 maximum slew rate."));
+			Serial.println(F("   In POSITION and SERVO command modes this puts a cap on the slew velocity."));
+			Serial.println(F("\n   This is an integer in arbitrary units between 1 and 1000. Must be low enough to both"));
+			Serial.println(F("   prevent the motor from stalling and to allow accurate tracking of an encoder:")); 	
+			Serial.println(F("   Strike 'Enter' to leave as is:")); 	
+			Serial.println(F("\n\n>>"));
+			PROMPT_maxslewvel1Entry();
+			if (exitflag == true){
+				delay(2000);
+				goto ch1menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+			else {
+				Serial.print(F("CHANNEL 1 MAXIMUM SLEW RATE SET TO "));
+				Serial.print(maxslewvel1);
+				Serial.println(F("\n\n\n\n"));
+				delay(2000);		
 				goto ch1menu;
 			}
 		}
 		//**Set waveform TORQUE SMOOTHING
-		else if (rxchars[0] == '8'){
+		else if (rxchars[0] == '9'){
 			Serial.println(F("Set channel 1 commutation waveform for torque smoothing:"));
 			Serial.println(F("   Torque smoothing may improve motion smoothness with some motors."));
 			Serial.println(F("   If so inclined, the aggressiveness and phase may be tweaked by trial and error.\n"));
@@ -748,33 +923,32 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch1menu;
 		}
-		else if (rxchars[0] == '9'){
+		else if (rxchars[0] == 't' || rxchars[0] == 'T'){
 			Serial.println(F("\nRunning motor on channel 1 for about 10s..."));
 			TorqueCal1();
 			goto ch1menu;
 		}
 	}
-
+	//CHANNEL 2 CONFIGURATION
 	if (rxchars[0] == '2'){	
 		ch2menu:
 		exitflag = false;
 		Serial.println(F("Channel 2 Configuration:\n"));
 		Serial.println(F("1: Set POWER"));
-		Serial.println(F("2: Set command type (VELOCITY or POSITION)"));
-		Serial.println(F("3: Set sensor type"));
+		Serial.println(F("2: Set command type (VELOCITY, POSITION, or SERVO)"));
+		Serial.println(F("3: Set SENSOR type (NONE, ENCODER, or HALL)"));
 		Serial.println(F("4: Set directionality (NORMAL or REVERSE)"));
-		Serial.println(F("5: Display all present settings"));
 		Serial.println(F("m: Return to main menu"));
 		Serial.println(F(" "));
-		Serial.println(F("Advanced settings:"));
-		Serial.println(F("6: Set PWM command GAIN"));
-		Serial.println(F("7: Set ACCELERATION"));
-		Serial.println(F("8: Set waveform TORQUE SMOOTHING"));
-		Serial.println(F("9: Test/run channel 2 motor"));
+		Serial.println(F("Additional settings:"));
+		Serial.println(F("5: Set PWM command GAIN"));
+		Serial.println(F("6: Set PWM center OFFSET"));
+		Serial.println(F("7: Set ACCELERATION")); 
+		Serial.println(F("8: Set maximum position/servo SLEW RATE"));
+		Serial.println(F("9: Set waveform TORQUE SMOOTHING"));
+		Serial.println(F("t: Test/run channel 2 motor"));
 		Serial.println(F("\n\n>>"));
-
 		SerialReceiveLoop();
-		sensormenu2:
 		exitflag =false;
 		//**Set Power
 		if (rxchars[0] == '1'){	
@@ -807,9 +981,10 @@ int SerialPrompt(){
 		}
 		//**Set PWM command type to VELOCITY or POSITION
 		else if (rxchars[0] == '2'){
-			Serial.println(F("Set channel 2 to interpret ROS or PWM input as either velocity or position commands:"));
-			Serial.println(F("   v: VELOCITY (default)"));
+			Serial.println(F("Set channel 2 to interpret ROS or PWM input as either velocity, position, or servo commands:"));
+			Serial.println(F("   v: VELOCITY"));
 			Serial.println(F("   p: POSITION"));
+			Serial.println(F("   s: SERVO (same as POSITION but with closed-loop control) -- requires encoder"));
 			Serial.println(F("\n   (Or strike 'Enter' to leave as is)")); 
 			Serial.println(F("\n\n>>"));
 			SerialReceiveLoop();
@@ -821,6 +996,10 @@ int SerialPrompt(){
 				EEPROM.write(addr_commandmode2, 1);	//1 = position
 				Serial.print(F("CHANNEL 2 INPUT SET TO 'POSITION'"));
 			}
+			else if (rxchars[0] == 's' || rxchars[0] == 'S'){
+				EEPROM.write(addr_commandmode2, 2);	//2 = servo
+				Serial.print(F("CHANNEL 2 INPUT SET TO 'SERVO'"));
+			}
 			else {
 				Serial.println(F("COMMAND TYPE NOT CHANGED"));
 			}	
@@ -831,32 +1010,30 @@ int SerialPrompt(){
 		//**Set ROS configuration
 		else if (rxchars[0] == '3'){
 			Serial.println(F("Set channel 2 sensor type:"));
-			Serial.println(F("   n: NONE (default)"));
-			Serial.print(F("   e: Quadrature ENCODER -- publishes quadrature ticks (integers 0-3) on /"));
+			Serial.println(F("   0: NONE -- open-loop control"));
+			Serial.print(F("   1: ENCODER -- publishes quadrature ticks (integers 0-3) on /"));
 			Serial.print(enctopic);
-			Serial.println(F(" topic."));
-			Serial.print(F("   h: HALL -- publishes hall ticks (integers 0-2) on /"));	
+			Serial.println(F(" topic for external closed-loop control -- also needed for SERVO command mode"));
+			Serial.print(F("   2: HALL -- publishes hall ticks (integers 0-2) on /"));	
 			Serial.print(enctopic);
-			Serial.println(F(" topic."));
+			Serial.println(F(" topic for external closed-loop control"));
 			Serial.println(F("\n   (Or strike 'Enter' to leave as is)")); 
 			Serial.println(F("\n\n>>"));	
 			SerialReceiveLoop();
-			if (rxchars[0] == 'n' || rxchars[0] == 'N'){
+			if (rxchars[0] == '0'){
 				EEPROM.write(addr_sensortype2, 0);	//0 = none
-				Serial.println(F("CHANNEL 2 SENSOR SET TO 'NONE'"));
-				//Serial.println(F("POWER MODE WILL REVERT TO 'FIXED'"));
-				//EEPROM.write(addr_currentmode2, 0);	//0 = fixed 
+				Serial.println(F("CHANNEL 2 SENSOR SET TO 'NONE' FOR OPEN LOOP CONTROL"));
 			}			
-			else if (rxchars[0] == 'e' || rxchars[0] == 'E'){
+			else if (rxchars[0] == '1'){
 				exitflag = false;
-				Serial.print(F("CHANNEL 2 SENSOR SET TO 'ENCODER'"));
-				EEPROM.write(addr_sensortype2, 1);	//1 = encoder	
+				EEPROM.write(addr_sensortype2, 1);	//1 = encoder
+				Serial.print(F("CHANNEL 2 SENSOR SET TO 'ENCODER' FOR EXTERNAL VELOCITY OR POSITION CLOSED-LOOP CONTROL"));	
 			}
-			else if (rxchars[0] == 'h' || rxchars[0] == 'H'){
+			else if (rxchars[0] == '2'){
 				exitflag = false;
-				Serial.print(F("CHANNEL 2 SENSOR SET TO 'HALL'"));
-				EEPROM.write(addr_sensortype2, 2);	//2 = hall	
-			}	
+				EEPROM.write(addr_sensortype2, 2);	//2 = hall
+				Serial.print(F("CHANNEL 2 SENSOR SET TO 'HALL' FOR EXTERNAL VELOCITY OR POSITION CLOSED-LOOP CONTROL"));	
+			}
 			else{
 				Serial.print(F("SENSOR TYPE NOT CHANGED"));
 			}	
@@ -887,19 +1064,13 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch2menu;
 		}
-		//**Display all present settings
-		else if (rxchars[0] == '5'){
-			CheckConfig();
-			DisplaySettings();
-			delay(7000);
-			goto ch2menu;			
-		}
+
 		//**Return to main menu
 		else if (rxchars[0] == 'm'){
 			goto mainmenu;
 		}
 		//**Set velocity/position GAIN
-		else if (rxchars[0] == '6'){	
+		else if (rxchars[0] == '5'){	
 			Serial.println(F("Set channel 2 PWM command gain."));
 			Serial.println(F("   This is the scaling coefficient for velocity or position inputs when in PWM-command mode."));
 			Serial.println(F("\n   Enter an integer between 1 and 1000 (arbitrary units)"));	
@@ -916,12 +1087,29 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch2menu;
 		}
+		//**Set PWM CENTER
+		else if (rxchars[0] == '6'){	
+			Serial.println(F("Set channel 2 PWM center offset."));
+			Serial.println(F("   This defines the pulse width which defines the command-neutral position."));
+			Serial.println(F("\n   Enter an integer between 1 and 9000 (1500 is common)"));	
+			Serial.println(F("   or strike 'Enter' to leave as is:")); 	
+			Serial.println(F("\n\n>>"));
+			PROMPT_pwmoffset2Entry();
+			if (exitflag == true){
+				delay(2000);
+				goto ch2menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+			Serial.print(F("\nCHANNEL 2 PWM CENTER SET TO "));
+			Serial.print(pwmoffset2);
+			Serial.println(F("\n\n\n\n"));
+			delay(2000);		
+			goto ch2menu;
+		}
+
 		//**Set ACCELERATION
 		else if (rxchars[0] == '7'){	
 			Serial.println(F("Set channel 2 acceleration."));
-			Serial.println(F("   In VELOCITY input mode, this affects how aggressively the motor ramps velocity to the commanded velocity."));
-			Serial.println(F("   In POSITION input mode, this affects how aggressively the motor's position follows the commanded position."));
-			Serial.println(F("\n   Enter acceleration (an integer between 1 an 9999, arbitary units)."));
+			Serial.println(F("\n   This is an integer in arbitrary units between 1 and 9999."));
 			Serial.println(F("   Enter 10000 to turn off acceleration dynamics entirely."));
 			Serial.println(F("   Strike 'Enter' to leave as is:")); 	
 			Serial.println(F("\n\n>>"));
@@ -933,18 +1121,40 @@ int SerialPrompt(){
 			if (accel2 == 10000){
 				Serial.println(F("CHANNEL 2 ACCELERATION DYNAMICS TURNED OFF"));
 				delay(2000);
-				goto ch2menu;
+				goto ch2menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
 			}
 			else {
 				Serial.print(F("CHANNEL 2 ACCELERATION SET TO "));
 				Serial.print(accel2);
 				Serial.println(F("\n\n\n\n"));
 				delay(2000);		
+				goto ch2menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+		}
+
+		//**Set MAX SLEW RATE
+		else if (rxchars[0] == '8'){	
+			Serial.println(F("Set channel 2 maximum slew rate."));
+			Serial.println(F("   In POSITION and SERVO command modes this puts a cap on the slew velocity."));
+			Serial.println(F("\n   This is an integer in arbitrary units between 1 and 1000. Must be low enough to both"));
+			Serial.println(F("   prevent the motor from stalling and to allow accurate tracking of an encoder:")); 	
+			Serial.println(F("   Strike 'Enter' to leave as is:")); 	
+			Serial.println(F("\n\n>>"));
+			PROMPT_maxslewvel2Entry();
+			if (exitflag == true){
+				delay(2000);
+				goto ch2menu;		//Yes that's a goto. FRACK modern programming sensibilities. 
+			}
+			else {
+				Serial.print(F("CHANNEL 2 MAXIMUM SLEW RATE SET TO "));
+				Serial.print(maxslewvel2);
+				Serial.println(F("\n\n\n\n"));
+				delay(2000);		
 				goto ch2menu;
 			}
 		}
 		//**Set waveform TORQUE SMOOTHING
-		else if (rxchars[0] == '8'){
+		else if (rxchars[0] == '9'){
 			Serial.println(F("Set channel 2 commutation waveform for torque smoothing:"));
 			Serial.println(F("   Torque smoothing may improve motion smoothness with some motors."));
 			Serial.println(F("   If so inclined, the aggressiveness and phase may be tweaked by trial and error.\n"));
@@ -1002,12 +1212,14 @@ int SerialPrompt(){
 			delay(2000);		
 			goto ch2menu;
 		}
-		else if (rxchars[0] == '9'){
+		else if (rxchars[0] == 't' || rxchars[0] == 'T'){
 			Serial.println(F("\nRunning motor on channel 2 for about 10s..."));
 			TorqueCal2();
 			goto ch2menu;
 		}
 	}
+
+	//ROS CONFIGURATION
 	if (rxchars[0] == '3'){
 		rosmenu:
 		Serial.println(F("ROS configuration:"));
@@ -1096,7 +1308,68 @@ int SerialPrompt(){
 
 	}
 
-	else if (rxchars[0] == 'q' || rxchars[0] == 'Q'){	
+	//LIST ALL SETTINGS
+	if (rxchars[0] == '4'){	
+			CheckConfig();
+			DisplaySettings();
+			delay(7000);
+			goto mainmenu;			
+	}
+
+	//RESET TO FACTORY DEFAULTS
+	if (rxchars[0] == '5'){	
+
+		EEPROM.write(addr_maxIset1l, 255);  
+		EEPROM.write(addr_maxIset1r, 255);	
+		EEPROM.write(addr_maxIset2l, 255);  
+		EEPROM.write(addr_maxIset2r, 255);	
+		EEPROM.write(addr_minIset1l, 255);  
+		EEPROM.write(addr_minIset1r, 255);	
+		EEPROM.write(addr_minIset2l, 255);  
+		EEPROM.write(addr_minIset2r, 255);	
+		EEPROM.write(addr_gain1l, 255);  
+		EEPROM.write(addr_gain1r, 255);	
+		EEPROM.write(addr_gain2l, 255);  
+		EEPROM.write(addr_gain2r, 255);	
+		EEPROM.write(addr_pwmoffset1l, 255);  
+		EEPROM.write(addr_pwmoffset1r, 255);	
+		EEPROM.write(addr_pwmoffset2l, 255);  
+		EEPROM.write(addr_pwmoffset2r, 255);	
+		EEPROM.write(addr_wheelbasescalel, 255);  
+		EEPROM.write(addr_wheelbasescaler, 255);  
+		EEPROM.write(addr_wheeldiamscalel, 255);	
+		EEPROM.write(addr_wheeldiamscaler, 255);	
+		EEPROM.write(addr_pwmoffset1l, 255);  
+		EEPROM.write(addr_pwmoffset1r, 255);	
+		EEPROM.write(addr_torqueprofile1, 255);	
+		EEPROM.write(addr_torqueprofile2, 255);	
+		EEPROM.write(addr_tscoeff1, 255);	
+		EEPROM.write(addr_tscoeff2, 255);	
+		EEPROM.write(addr_currentmode1, 255);	
+		EEPROM.write(addr_currentmode2, 255);	
+		EEPROM.write(addr_commandmode1, 255);	
+		EEPROM.write(addr_commandmode2, 255);	
+		EEPROM.write(addr_sensortype1, 255);	
+		EEPROM.write(addr_sensortype2, 255);	
+		EEPROM.write(addr_dir1, 255);	
+		EEPROM.write(addr_dir2, 255);	
+		EEPROM.write(addr_accel1l, 255);	
+		EEPROM.write(addr_accel1r, 255);	
+		EEPROM.write(addr_accel2l, 255);	
+		EEPROM.write(addr_accel2r, 255);	
+		EEPROM.write(addr_maxslewvel1l, 255);	
+		EEPROM.write(addr_maxslewvel1r, 255);	
+		EEPROM.write(addr_maxslewvel2l, 255);	
+		EEPROM.write(addr_maxslewvel2r, 255);	
+		EEPROM.write(addr_commandtopic, 255);
+		Serial.print(F("ALL CONFIGURATION SETTINGS HAVE BEEN RESET TO THE FACTORY DEFAULTS. REBOOTING..."));
+		Serial.println(F("\n\n\n\n"));
+		delay(2000);		
+		softReset();
+	}
+
+	//RESTART	
+	if (rxchars[0] == 'q' || rxchars[0] == 'Q'){	
 		softReset();
 	}
 }

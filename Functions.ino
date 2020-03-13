@@ -42,6 +42,20 @@ void CheckConfig(){
 	if (gain2 > 10000){	//If the number is bigger than our maximum, assume that the initial gain configuration was never done and reset gain to a default value.
 		gain2 = 60;
 	}
+	//Read pwmoffset1
+	lhlf = EEPROM.read(addr_pwmoffset1l);  
+	rhlf = EEPROM.read(addr_pwmoffset1r);
+	pwmoffset1 = lhlf*100+rhlf;
+	if (pwmoffset1 > 10000){	//If the number is bigger than our maximum, assume that the initial gain configuration was never done and reset gain to a default value.
+		pwmoffset1 = 1500;
+	}
+	//Read pwmoffset2
+	lhlf = EEPROM.read(addr_pwmoffset2l);  
+	rhlf = EEPROM.read(addr_pwmoffset2r);
+	pwmoffset2 = lhlf*100+rhlf;
+	if (pwmoffset2 > 10000){	//If the number is bigger than our maximum, assume that the initial gain configuration was never done and reset gain to a default value.
+		pwmoffset2 = 1500;
+	}
 	//Read wheelbasescale
 	lhlf = EEPROM.read(addr_wheelbasescalel);  
 	rhlf = EEPROM.read(addr_wheelbasescaler);
@@ -89,22 +103,22 @@ void CheckConfig(){
 	//Read commandmode1
 	commandmode1 = EEPROM.read(addr_commandmode1);
 	if (commandmode1 == 255){
-		commandmode1 = 1;		//0 = VELOCITY control, 1 = POSITION control		ch1 on vel and ch2 on pos works
+		commandmode1 = 0;		//0 = VELOCITY control, 1 = POSITION control, 2 = SERVO control
 	}
 	//Read commandmode2
 	commandmode2 = EEPROM.read(addr_commandmode2);
 	if (commandmode2 == 255){
-		commandmode2 = 1;		//1 = VELOCITY control, 1 = POSITION control
+		commandmode2 = 0;		//1 = VELOCITY control, 1 = POSITION control, 2 = SERVO control
 	}
 	//Read sensortype1
 	sensortype1 = EEPROM.read(addr_sensortype1);
 	if (sensortype1 == 255){
-		sensortype1 = 0;		//0 = NONE, 1 = ENCODER, 2 = HALL
+		sensortype1 = 0;		//0 = NONE, 1 = ENCODER, 2 = ENCLODER/SERVO, 3 = HALL
 	}
 	//Read sensortype2
 	sensortype2 = EEPROM.read(addr_sensortype2);
 	if (sensortype2 == 255){
-		sensortype2 = 0;		//0 = NONE, 1 = ENCODER, 2 = HALL
+		sensortype2 = 0;		//0 = NONE, 1 = ENCODER, 2 = ENCLODER/SERVO, 3 = HALL
 	}
 	//Read dir1
 	dir1 = EEPROM.read(addr_dir1);
@@ -130,6 +144,24 @@ void CheckConfig(){
 	if (accel2 > 10000){	//If the number is bigger than our maximum, assume that the initial current configuration was never done and reset Iset to a default value.
 		accel2 = 3000;
 	}
+	//Read maxslewvel1
+	lhlf = EEPROM.read(addr_maxslewvel1l);  //read left half
+	rhlf = EEPROM.read(addr_maxslewvel1r);  //read right half 
+	maxslewvel1 = lhlf*100 + rhlf;    //Put the two halves back together
+	if (maxslewvel1 > 1000){	//If the number is bigger than our maximum, assume that the initial current configuration was never done and reset Iset to a default value.
+		maxslewvel1 = 30;
+	}
+	maxslewvel1 = maxslewvel1/1000;
+
+	//Read maxslewvel2
+	lhlf = EEPROM.read(addr_maxslewvel2l);  //read left half
+	rhlf = EEPROM.read(addr_maxslewvel2r);  //read right half 
+	maxslewvel2 = lhlf*100 + rhlf;    //Put the two halves back together
+	if (maxslewvel2 > 1000){	//If the number is bigger than our maximum, assume that the initial current configuration was never done and reset Iset to a default value.
+		maxslewvel2 = 30;
+	}
+	maxslewvel2 = maxslewvel2/1000;
+
 	//Read commandtopic
 	commandtopic = EEPROM.read(addr_commandtopic);
 	if (commandtopic == 255){
@@ -171,6 +203,9 @@ void DisplaySettings(){
 		else if (commandmode1 == 1){
 			Serial.println(F("   PWM command mode: POSITION"));
 		}
+		else if (commandmode1 == 2){
+			Serial.println(F("   PWM command mode: SERVO"));
+		}
 	}
 	else {
 		if (commandmode1 == 0){
@@ -179,29 +214,32 @@ void DisplaySettings(){
 		else if (commandmode1 == 1){
 			Serial.println(F("   ROS and PWM command mode: POSITION"));
 		}
+		else if (commandmode1 == 2){
+			Serial.println(F("   ROS and PWM command mode: SERVO"));
+		}
 	}
 	if (sensortype1 == 0){
-		Serial.println(F("   ROS sensor type: NONE"));
+		Serial.println(F("   Sensor type: NONE"));
 	}
 	else if (sensortype1 == 1){
-		Serial.println(F("   ROS sensor type: ENCODER"));
-		Serial.print(F("   ROS topic for encoder ticks: "));
+		Serial.println(F("   Sensor type: ENCODER"));
+		Serial.print(F("   Topic for encoder ticks: "));
 		Serial.println(enctopic);
 	}
 	else if (sensortype1 == 2){
-		Serial.println(F("   ROS sensor type: HALL"));
-		Serial.print(F("   ROS topic for hall ticks: "));
+		Serial.println(F("   Sensor type: HALL"));
+		Serial.print(F("   Topic for hall ticks: "));
 		Serial.println(enctopic);
 	}	
 
 	fholder = maxIset1/1000;		//Convert mA to A	
 	Serial.print(F("   Current: "));	
 	Serial.print(fholder);
-	Serial.println(F("A."));
+	Serial.println(F("A"));
 	fholder = minIset1/1000;		//Convert mA to A	
 	Serial.print(F("   Rest current: "));			
 	Serial.print(fholder);
-	Serial.println(F("A."));
+	Serial.println(F("A"));
 
 	if (dir1 == 0){
 		Serial.println(F("   Directionality: NORMAL"));
@@ -213,8 +251,15 @@ void DisplaySettings(){
 	Serial.print(F("   PWM command gain: "));
 	Serial.println(gain1);
 
+	Serial.print(F("   PWM center offset: "));
+	Serial.println(pwmoffset1);
+
 	Serial.print(F("   Acceleration: "));
 	Serial.println(accel1);
+
+	fholder = maxslewvel1*1000;
+	Serial.print(F("   Max slew rate: "));
+	Serial.println(fholder);
 	
 	if (torqueprofile1 == 0){
 		Serial.println(F("   Torque smoothing: OFF"));
@@ -238,6 +283,9 @@ void DisplaySettings(){
 		else if (commandmode2 == 1){
 			Serial.println(F("   PWM command mode: POSITION"));
 		}
+		else if (commandmode2 == 2){
+			Serial.println(F("   PWM command mode: SERVO"));
+		}
 	}
 	else {
 		if (commandmode2 == 0){
@@ -246,29 +294,32 @@ void DisplaySettings(){
 		else if (commandmode2 == 1){
 			Serial.println(F("   ROS and PWM command mode: POSITION"));
 		}
+		else if (commandmode2 == 2){
+			Serial.println(F("   ROS and PWM command mode: SERVO"));
+		}
 	}
 	if (sensortype2 == 0){
-		Serial.println(F("   ROS sensor type: NONE"));
+		Serial.println(F("   Sensor type: NONE"));
 	}
 	else if (sensortype2 == 1){
-		Serial.println(F("   ROS sensor type: ENCODER"));
-		Serial.print(F("   ROS topic for encoder ticks: "));
+		Serial.println(F("   Sensor type: ENCODER"));
+		Serial.print(F("   Topic for encoder ticks: "));
 		Serial.println(enctopic);
 	}
 	else if (sensortype2 == 2){
-		Serial.println(F("   ROS sensor type: HALL"));
-		Serial.print(F("   ROS topic for hall ticks: "));
+		Serial.println(F("   Sensor type: HALL"));
+		Serial.print(F("   Topic for hall ticks: "));
 		Serial.println(enctopic);
 	}	
 
 	fholder = maxIset2/1000;		//Convert mA to A	
 	Serial.print(F("   Current: "));	
 	Serial.print(fholder);
-	Serial.println(F("A."));
+	Serial.println(F("A"));
 	fholder = minIset2/1000;		//Convert mA to A	
 	Serial.print(F("   Rest current: "));			
 	Serial.print(fholder);
-	Serial.println(F("A."));
+	Serial.println(F("A"));
 
 	if (dir2 == 0){
 		Serial.println(F("   Directionality: NORMAL"));
@@ -280,8 +331,15 @@ void DisplaySettings(){
 	Serial.print(F("   PWM command gain: "));
 	Serial.println(gain2);
 
+	Serial.print(F("   PWM center offset: "));
+	Serial.println(pwmoffset2);
+
 	Serial.print(F("   Acceleration: "));
 	Serial.println(accel2);
+
+	fholder = maxslewvel2*1000;
+	Serial.print(F("   Max slew rate: "));
+	Serial.println(fholder);
 	
 	if (torqueprofile2 == 0){
 		Serial.println(F("   Torque smoothing: OFF"));
@@ -349,7 +407,6 @@ void adu2amps(){		//Convert current sense value from ADUs to AMPERES.
 
 int SetPower(){
 	int i = 0;    //A counter for determining rate of current rise 
-
 	digitalWrite(13, HIGH);
 	//Check quiescent current draw:
 	delay(500);   //Wait for inrush current to settle.
@@ -416,7 +473,9 @@ int SetPower(){
 		}
 		i++;  
 	} while (I_A < (((maxIset1)/1000)+I_qui)-.04); //As soon as I_A exceeds the user-determined current in amps, exit the loop, thereby maintaining the last power setting.
-	if (digitalRead(mode_config) == LOW){
+	if (digitalRead(mode_ros) == LOW){
+	}
+	else {
 		if (power1 == 0){
 			Serial.println(F("Motor 1 not connected."));
 		}
@@ -426,7 +485,7 @@ int SetPower(){
 			Serial.println(F("A (as measured).\n"));
 		}	
 	}
-	//delay(3000);		//Uncomment for diagnostic reaons (gives time to check displayed value against a meter)
+	//delay(3000);		//Uncomment for diagnostic reasons (gives time to check displayed value against a meter)
 	power1_high = power1;
 	power1 = 0;
 	//Write the new power setting
@@ -487,7 +546,9 @@ int SetPower(){
 		}
 		i++;  
 	} while (I_A < (((maxIset2)/1000)+I_qui)-.04); //As soon as I_A exceeds the user-determined current in amps, exit the loop, thereby maintaining the last power setting.
-	if (digitalRead(mode_config) == LOW){
+	if (digitalRead(mode_ros) == LOW){
+	}
+	else {
 		if (power2 == 0){
 			Serial.println(F("Motor 2 not connected."));
 		}
@@ -515,50 +576,53 @@ int SetPower(){
 }
 
 void ReadEnc1(){
-	if (digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == LOW && enc1_laststate != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc1_laststate = 0;
-		ticksarray[1] = enc1_laststate;
+	if (digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == LOW && enc1_state != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc1_state = 0;
+		//digitalWrite(13, HIGH); 		//DEBUG
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == LOW && enc1_laststate != 1){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc1_laststate = 1;
-		ticksarray[1] = enc1_laststate;
+	else if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == LOW && enc1_state != 1){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc1_state = 1;
+		//digitalWrite(13, LOW); 		//DEBUG
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == HIGH && enc1_laststate != 2){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc1_laststate = 2;
-		ticksarray[1] = enc1_laststate;
+	else if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == HIGH && enc1_state != 2){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc1_state = 2;
+		//digitalWrite(13, HIGH); 		//DEBUG
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == HIGH && enc1_laststate != 3){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc1_laststate = 3;
-		ticksarray[1] = enc1_laststate;
+	else if (digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == HIGH && enc1_state != 3){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc1_state = 3;
+		//digitalWrite(13, LOW); 		//DEBUG
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-
 	ticks_msg.data_length = 2;
 }
 
-void ReadHall1(){		////////////////////////////Should be similar for reading encoder////////////////////////////		
-	if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == LOW && digitalRead(enc1_pin5) == LOW && enc1_laststate != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc1_laststate = 0;
-		ticksarray[1] = enc1_laststate;
+void ReadHall1(){		
+	if (digitalRead(enc1_pin3) == HIGH && digitalRead(enc1_pin4) == LOW && digitalRead(enc1_pin5) == LOW && enc1_state != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc1_state = 0;
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc1_pin4) == HIGH && digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin5) == LOW && enc1_laststate != 1){	
-		enc1_laststate = 1;
-		ticksarray[1] = enc1_laststate;
+	else if (digitalRead(enc1_pin4) == HIGH && digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin5) == LOW && enc1_state != 1){	
+		enc1_state = 1;
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc1_pin5) == HIGH && digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == LOW && enc1_laststate != 2){	
-		enc1_laststate = 2;
-		ticksarray[1] = enc1_laststate;
+	else if (digitalRead(enc1_pin5) == HIGH && digitalRead(enc1_pin3) == LOW && digitalRead(enc1_pin4) == LOW && enc1_state != 2){	
+		enc1_state = 2;
+		ticksarray[0] = enc1_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
@@ -566,50 +630,53 @@ void ReadHall1(){		////////////////////////////Should be similar for reading enc
 }
 
 void ReadEnc2(){
-	if (digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == LOW && enc2_laststate != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc2_laststate = 0;
-		ticksarray[1] = enc2_laststate;
+	if (digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == LOW && enc2_state != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc2_state = 0;
+		//digitalWrite(13, HIGH); 		//DEBUG
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == LOW && enc2_laststate != 1){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc2_laststate = 1;
-		ticksarray[1] = enc2_laststate;
+	else if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == LOW && enc2_state != 1){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc2_state = 1;
+		//digitalWrite(13, LOW); 		//DEBUG
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == HIGH && enc2_laststate != 2){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc2_laststate = 2;
-		ticksarray[1] = enc2_laststate;
+	else if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == HIGH && enc2_state != 2){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc2_state = 2;
+		//digitalWrite(13, HIGH); 		//DEBUG
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == HIGH && enc2_laststate != 3){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc2_laststate = 3;
-		ticksarray[1] = enc2_laststate;
+	else if (digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == HIGH && enc2_state != 3){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc2_state = 3;
+		//digitalWrite(13, LOW); 		//DEBUG
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-
 	ticks_msg.data_length = 2;
 }
 
-void ReadHall2(){		////////////////////////////Should be similar for reading encoder////////////////////////////		
-	if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == LOW && digitalRead(enc2_pin5) == LOW && enc2_laststate != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
-		enc2_laststate = 0;
-		ticksarray[1] = enc2_laststate;
+void ReadHall2(){		
+	if (digitalRead(enc2_pin3) == HIGH && digitalRead(enc2_pin4) == LOW && digitalRead(enc2_pin5) == LOW && enc2_state != 0){		//Trigger on rising edge only when this pin wasn't the last one triggered.
+		enc2_state = 0;
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc2_pin4) == HIGH && digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin5) == LOW && enc2_laststate != 1){	
-		enc2_laststate = 1;
-		ticksarray[1] = enc2_laststate;
+	else if (digitalRead(enc2_pin4) == HIGH && digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin5) == LOW && enc2_state != 1){	
+		enc2_state = 1;
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
-	else if (digitalRead(enc2_pin5) == HIGH && digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == LOW && enc2_laststate != 2){	
-		enc2_laststate = 2;
-		ticksarray[1] = enc2_laststate;
+	else if (digitalRead(enc2_pin5) == HIGH && digitalRead(enc2_pin3) == LOW && digitalRead(enc2_pin4) == LOW && enc2_state != 2){	
+		enc2_state = 2;
+		ticksarray[1] = enc2_state;
 		ticks_msg.data = ticksarray;
 		pub_2.publish(&ticks_msg);
 	}
@@ -623,13 +690,13 @@ void CheckMode(){
 			if (commandmode1 == 0){	//If in velocity input mode
 				vel1 = vel1_holder;
 			}
-			else if (commandmode1 == 1){	//If in position input mode
+			else {	//If in position or servo input mode
 				pos1 = pos1_holder;
 			}
 			if (commandmode2 == 0){	//If in velocity input mode
 				vel2 = vel2_holder;
 			}
-			else if (commandmode2 == 1){	//If in position input mode
+			else {	//If in position or servo input mode
 				pos2 = pos2_holder;
 			}
 		}
@@ -693,19 +760,19 @@ void CheckMode(){
 
 		if(pwm1active == true){     //Only get velocity data from this PWM channel if it was found to be connected above    
 			if (commandmode1 == 0){	//if in velocity mode
-				vel1 = (pwm1_t-1500)*.000002*gain1;	//Normal PWM servo pulsewidth goes from 800 to 2200ms. We subtract 1500ms, corresponding to the middle of that range, so that pulses in the range 800-1499 will have negative velocity, and 1501-2200 will be positive. 
+				vel1 = (pwm1_t-pwmoffset1)*.000002*gain1;	//Normal PWM servo pulsewidth goes from 800 to 2200ms. We subtract 1500ms, corresponding to the middle of that range, so that pulses in the range 800-1499 will have negative velocity, and 1501-2200 will be positive. 
 			}
-			else if (commandmode1 == 1){
-				pos1 = (pwm1_t-1500)*.0002*gain1;
+			else {	//If in position or servo mode
+				pos1 = (pwm1_t-pwmoffset1)*.0002*gain1;
 			}
 		}
 
 		if(pwm2active == true){    //Only get velocity data from this PWM channel if it was found to be connected above
 			if (commandmode2 == 0){
-				vel2 = (pwm2_t-1500)*.000002*gain2;
+				vel2 = (pwm2_t-pwmoffset2)*.000002*gain2;
 			}
-			else if (commandmode2 == 1){
-				pos2 = (pwm2_t-1500)*.0002*gain2;
+			else {	//If in position or servo mode
+				pos2 = (pwm2_t-pwmoffset2)*.0002*gain2;
 			}
 		}
 		pwmflag = true;
