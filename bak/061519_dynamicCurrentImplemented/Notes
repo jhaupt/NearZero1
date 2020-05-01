@@ -1,0 +1,1 @@
+Damned currentmode variable doesn't hold it's value. It's set properly in the serial funciton, but in the roll loop it always goes to 0.
